@@ -6,26 +6,26 @@ var logger = require("morgan");
 
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
-
-var app = express();
-
+// new routers
 const campsiteRouter = require("./routes/campsiteRouter");
 const promotionRouter = require("./routes/promotionRouter");
 const partnerRouter = require("./routes/partnerRouter");
 
+var app = express();
+
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "jade");
-
-app.use("/campsites", campsiteRouter);
-app.use("/promotions", promotionRouter);
-app.use("/partners", partnerRouter);
 
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
+// new app.use
+app.use("/campsites", campsiteRouter);
+app.use("/promotions", promotionRouter);
+app.use("/partners", partnerRouter);
 
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
