@@ -6,6 +6,8 @@ const authenticate = require("../authenticate");
 
 const router = express.Router();
 
+const cors = require("./cors");
+
 /* GET users listing. */
 // before task 3
 // router.get("/", function (req, res, next) {
@@ -13,22 +15,25 @@ const router = express.Router();
 // });
 
 // after task 3
-router.get(
-  "/",
-  authenticate.verifyUser,
-  authenticate.verifyAdmin,
-  (req, res, next) => {
-    User.find()
-      .then((users) => {
-        res.statusCode = 200;
-        res.setHeader("Content-Type", "application/json");
-        res.json(users);
-      })
-      .catch((err) => next(err));
-  }
-);
+router
+  .options(cors.corsWithOptions, (req, res) => res.sendStatus(200))
+  .get(
+    "/",
+    cors.cors,
+    authenticate.verifyUser,
+    authenticate.verifyAdmin,
+    (req, res, next) => {
+      User.find()
+        .then((users) => {
+          res.statusCode = 200;
+          res.setHeader("Content-Type", "application/json");
+          res.json(users);
+        })
+        .catch((err) => next(err));
+    }
+  );
 
-router.post("/signup", (req, res) => {
+router.post("/signup", cors.cors, (req, res) => {
   User.register(
     new User({ username: req.body.username }),
     req.body.password,
@@ -62,27 +67,31 @@ router.post("/signup", (req, res) => {
   );
 });
 
-router.post("/login", passport.authenticate("local"), (req, res) => {
-  const token = authenticate.getToken({ _id: req.user._id });
-  res.statusCode = 200;
-  res.setHeader("Content-Type", "application/json");
-  res.json({
-    success: true,
-    token: token,
-    status: "You are successfully logged in!",
+router
+  .options(cors.corsWithOptions, (req, res) => res.sendStatus(200))
+  .post("/login", cors.cors, passport.authenticate("local"), (req, res) => {
+    const token = authenticate.getToken({ _id: req.user._id });
+    res.statusCode = 200;
+    res.setHeader("Content-Type", "application/json");
+    res.json({
+      success: true,
+      token: token,
+      status: "You are successfully logged in!",
+    });
   });
-});
 
-router.get("/logout", (req, res, next) => {
-  if (req.session) {
-    req.session.destroy();
-    res.clearCookie("session-id");
-    res.redirect("/");
-  } else {
-    const err = new Error("You are not logged in!");
-    err.status = 401;
-    return next(err);
-  }
-});
+router
+  .options(cors.corsWithOptions, (req, res) => res.sendStatus(200))
+  .get("/logout", cors.cors, (req, res, next) => {
+    if (req.session) {
+      req.session.destroy();
+      res.clearCookie("session-id");
+      res.redirect("/");
+    } else {
+      const err = new Error("You are not logged in!");
+      err.status = 401;
+      return next(err);
+    }
+  });
 
 module.exports = router;
