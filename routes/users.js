@@ -19,7 +19,7 @@ router
   .options(cors.corsWithOptions, (req, res) => res.sendStatus(200))
   .get(
     "/",
-    cors.cors,
+    cors.corsWithOptions,
     authenticate.verifyUser,
     authenticate.verifyAdmin,
     (req, res, next) => {
@@ -33,7 +33,7 @@ router
     }
   );
 
-router.post("/signup", cors.cors, (req, res) => {
+router.post("/signup", cors.corsWithOptions, (req, res) => {
   User.register(
     new User({ username: req.body.username }),
     req.body.password,
@@ -67,9 +67,11 @@ router.post("/signup", cors.cors, (req, res) => {
   );
 });
 
-router
-  .options(cors.corsWithOptions, (req, res) => res.sendStatus(200))
-  .post("/login", cors.cors, passport.authenticate("local"), (req, res) => {
+router.post(
+  "/login",
+  cors.corsWithOptions,
+  passport.authenticate("local"),
+  (req, res) => {
     const token = authenticate.getToken({ _id: req.user._id });
     res.statusCode = 200;
     res.setHeader("Content-Type", "application/json");
@@ -78,20 +80,19 @@ router
       token: token,
       status: "You are successfully logged in!",
     });
-  });
+  }
+);
 
-router
-  .options(cors.corsWithOptions, (req, res) => res.sendStatus(200))
-  .get("/logout", cors.cors, (req, res, next) => {
-    if (req.session) {
-      req.session.destroy();
-      res.clearCookie("session-id");
-      res.redirect("/");
-    } else {
-      const err = new Error("You are not logged in!");
-      err.status = 401;
-      return next(err);
-    }
-  });
+router.get("/logout", cors.corsWithOptions, (req, res, next) => {
+  if (req.session) {
+    req.session.destroy();
+    res.clearCookie("session-id");
+    res.redirect("/");
+  } else {
+    const err = new Error("You are not logged in!");
+    err.status = 401;
+    return next(err);
+  }
+});
 
 module.exports = router;
